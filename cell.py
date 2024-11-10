@@ -5,3 +5,7 @@ class Cell:
         self.type = cell_type
     def __str__(self):
             return f"{self.type}"
+    def __deepcopy__(self, memo):
+        # إنشاء نسخة جديدة من Cell مع نسخ القيم
+        new_cell = Cell(self.x, self.y, self.type)
+        return new_cell
