@@ -34,6 +34,7 @@ class DFS:
                 
                 print("Modified current Grid after movement:")
                 modified_grid.display_grid()  # تحقق من الشبكة بعد الحركة
+                copy_from_current_grid.display_grid()  # تحقق من الشبكة بعد الحركة
                 
                 # إضافة الشبكة المعدلة إلى المكدس مع الموقع الجديد
                 if (target_cell.x, target_cell.y) not in self.visited:
