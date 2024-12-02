@@ -5,26 +5,25 @@ from grid import Grid
 from movement import Movement
 
 
-class DFS:
+class HC:
     def __init__(self, grid: Grid):
         self.grid = grid
         self.movement = Movement()
-        self.stack = [self.grid]  
+        self.queue = [self.grid]
         self.visited = set()
 
-    def search(self):
-        while self.stack:  
-            current_grid = self.stack.pop() 
-
+    def hill_climbing(self):
+        while self.queue:
+            current_grid = self.queue.pop(0)
             current_grid_state = self.grid_to_hash(current_grid)
 
             if current_grid_state in self.visited:
                 continue
 
             self.visited.add(current_grid_state)
-
             possible_moves = self.movement.get_possible_moves(current_grid)
 
+            possible_grids = []
             for target_cell in possible_moves:
                 selected_cell = None
                 possible_cells = []
@@ -43,21 +42,30 @@ class DFS:
                         g.grid[x][y] = copy.deepcopy(current_grid.grid[x][y])
 
                 modify_grid = self.movement.movement(
-                    g, selected_cell, target_cell
-                )
-
+                    g, selected_cell, target_cell)
                 new_grid_state = self.grid_to_hash(modify_grid)
 
-                if new_grid_state not in self.visited:
-                    self.stack.append(modify_grid)  # إضافة الشبكة الجديدة إلى الكومة
-                    print('********************************************')
-                    modify_grid.display_grid(modify_grid.grid)
+                possible_grids.append((modify_grid, new_grid_state))
 
-                    if self.movement.isWin(modify_grid):
-                        print("Congratulations, you won!")
-                        return
+            best_grid = None
+            best_heuristic = float('inf')
+            for grid, grid_state in possible_grids:
+                heuristic_value = self.movement.get_heuristic(grid)
+                if heuristic_value < best_heuristic:
+                    best_heuristic = heuristic_value
+                    best_grid = grid
 
-        print("No winning configuration found.")
+            if best_grid:
+
+                self.queue.append(best_grid)
+                print('********************************************')
+                best_grid.display_grid(best_grid.grid)
+
+                if self.movement.isWin(best_grid):
+                    print("Congratulations, you won!")
+                    return
+
+        print("No winning configuration found or queue limit reached.")
         return None
 
     def grid_to_hash(self, grid: Grid) -> int:

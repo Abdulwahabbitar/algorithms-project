@@ -1,55 +1,72 @@
 import copy
+import random
 from cell import Cell
 from grid import Grid
 from movement import Movement
 
+
 class BFS:
-    def __init__(self, grid: Grid, selected_cell: Cell):
+    def __init__(self, grid: Grid):
         self.grid = grid
         self.movement = Movement()
-        self.selected_cell = selected_cell
-        self.queue = [(selected_cell, self.grid)]
+        self.queue = [self.grid]
         self.visited = set()
-        self.visited.add(self.grid_to_string(grid))  # إضافة حالة الشبكة الأولى
 
     def search(self):
         while self.queue:
-            current_position, current_grid = self.queue.pop(0)
 
-            
+            current_grid = self.queue.pop(0)
+
+            current_grid_state = self.grid_to_hash(current_grid)
+
+            if current_grid_state in self.visited:
+                continue
+
+            self.visited.add(current_grid_state)
 
             possible_moves = self.movement.get_possible_moves(current_grid)
-            new_grid_generated = False  # متغير لتتبع ما إذا تم توليد شبكات جديدة
 
             for target_cell in possible_moves:
-                
-                # نسخ الشبكة الحالية
-                copy_of_grid = copy.deepcopy(current_grid)
+                selected_cell = None
+                possible_cells = []  
 
-                # تنفيذ الحركة
+                
+                for x in range(current_grid.row):
+                    for y in range(current_grid.col):
+                        if current_grid.grid[x][y].type in ['p', 'wp', 'r', 'wr']:
+                            possible_cells.append(current_grid.grid[x][y])
+
+               
+                if possible_cells:
+                    selected_cell = random.choice(possible_cells)
+
+                g = Grid(current_grid.row, current_grid.col)
+                for x in range(current_grid.row):
+                    for y in range(current_grid.col):
+                        g.grid[x][y] = copy.deepcopy(current_grid.grid[x][y])
+
                 modify_grid = self.movement.movement(
-                    copy_of_grid, current_position, target_cell)
-                
-                # تمثيل الشبكة الجديدة
-                grid_state = self.grid_to_string(modify_grid)
+                    g, selected_cell, target_cell
+                )
 
-                # تحقق مما إذا كانت الشبكة الجديدة قد زارت من قبل
-                if grid_state not in self.visited:
-                    self.visited.add(grid_state)  # أضفها إلى المزارات
-                    modify_grid.display_grid()
+                new_grid_state = self.grid_to_hash(modify_grid)
+
+                if new_grid_state not in self.visited:
+                    self.queue.append(modify_grid)
+                    print('********************************************')
+                    modify_grid.display_grid(modify_grid.grid)
+
                     if self.movement.isWin(modify_grid):
-                      print("Congratulations, you won!")
-                      return
-                    self.queue.append((target_cell, modify_grid))
-                    new_grid_generated = True  # تم توليد شبكة جديدة
+                        print("Congratulations, you won!")
+                        return
 
-            # بعد أن تم توليد الحركات الممكنة، قم بإضافة الشبكة الحالية إلى الزيارة
-            if new_grid_generated:
-                self.visited.add(self.grid_to_string(current_grid))
-            
-        print("No winning configuration found.")
+        print("No winning configuration found or queue limit reached.")
         return None
 
-    def grid_to_string(self, grid: Grid) -> str:
-        # تحويل الشبكة إلى سلسلة فريدة لتتبع الزيارات
-        return ''.join([cell.type for row in grid.grid for cell in row])
+    def grid_to_hash(self, grid: Grid) -> int:
+        return hash(
+            tuple(
+                tuple((cell.x, cell.y, cell.type) for cell in row)
+                for row in grid.grid
+            )
+        )

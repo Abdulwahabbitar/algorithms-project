@@ -1,20 +1,24 @@
 import copy
 import random
+import heapq
 from cell import Cell
 from grid import Grid
 from movement import Movement
 
 
-class DFS:
+class UCS:
     def __init__(self, grid: Grid):
         self.grid = grid
         self.movement = Movement()
-        self.stack = [self.grid]  
+        self.priority_queue = []
         self.visited = set()
+        self.counter = 0
+        heapq.heappush(self.priority_queue, (0, self.counter, self.grid))
 
     def search(self):
-        while self.stack:  
-            current_grid = self.stack.pop() 
+        while self.priority_queue:
+
+            current_cost, _, current_grid = heapq.heappop(self.priority_queue)
 
             current_grid_state = self.grid_to_hash(current_grid)
 
@@ -46,10 +50,14 @@ class DFS:
                     g, selected_cell, target_cell
                 )
 
+                new_cost = current_cost + 1
+
                 new_grid_state = self.grid_to_hash(modify_grid)
 
                 if new_grid_state not in self.visited:
-                    self.stack.append(modify_grid)  # إضافة الشبكة الجديدة إلى الكومة
+                    self.counter += 1
+                    heapq.heappush(self.priority_queue,
+                                   (new_cost, self.counter, modify_grid))
                     print('********************************************')
                     modify_grid.display_grid(modify_grid.grid)
 
@@ -57,7 +65,7 @@ class DFS:
                         print("Congratulations, you won!")
                         return
 
-        print("No winning configuration found.")
+        print("No winning configuration found or queue limit reached.")
         return None
 
     def grid_to_hash(self, grid: Grid) -> int:
